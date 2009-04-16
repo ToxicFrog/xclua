@@ -1,0 +1,37 @@
+include "pmlib/c.lua"
+
+CDIR = "src"
+HDIR = "include"
+INCLUDES = "-I%HDIR%"
+
+sources = group {
+    cfile "%CDIR%/xclua.c";
+}
+
+plugin = sharedlib {
+    install = pm.install "lib/xclua.%EXT%";
+    outputs = { "%U%-xclua.%EXT%" };
+
+	sources;
+}
+
+linux = group {
+    LIBS = { "-llua" };
+    EXT = "so";
+    
+    plugin;
+}
+
+win32 = group {
+	CC = "/mingw/bin/i386-mingw32-gcc";
+	INCLUDES = { PARENT, "-I/mingw/include/", "-I/mingw/include/lua/" };
+	LIBS = { "-L/mingw/bin/", "-llua51" };
+    EXT = "dll";
+
+	plugin;
+}
+
+all = group { linux, win32 }
+
+default = all
+
