@@ -1,22 +1,25 @@
+--:mode=lua:--
+
 include "pmlib/c.lua"
 
-CDIR = "src"
-HDIR = "include"
-INCLUDES = "-I%HDIR%"
-
-sources = group {
-    cfile "%CDIR%/xclua.c";
+objects = group {
+    CCSOURCES = "src";
+    CCINCLUDES = "include";
+    
+    c.file "xclua.c";
+    c.file "loadunload.c";
 }
 
-plugin = sharedlib {
+plugin = c.sharedlib {
     install = pm.install "lib/xclua.%EXT%";
     outputs = { "%U%-xclua.%EXT%" };
 
-	sources;
+	objects;
 }
 
 linux = group {
-    LIBS = { "-llua" };
+    LDFLAGS = { "-Wl,--export-dynamic" };
+    LIBS = { "lua" };
     EXT = "so";
     
     plugin;
@@ -24,11 +27,20 @@ linux = group {
 
 win32 = group {
 	CC = "/mingw/bin/i386-mingw32-gcc";
-	INCLUDES = { PARENT, "-I/mingw/include/", "-I/mingw/include/lua/" };
-	LIBS = { "-L/mingw/bin/", "-llua51" };
+    CCFLAGS = { PARENT, "-DWIN32" };
+	CCHEADERS = { PARENT, "/mingw/include/", "/mingw/include/lua/" };
+    LDPATHS = { "/mingw/bin", "/mingw/lib" };
+	LDLIBS = { "lua51" };
     EXT = "dll";
 
 	plugin;
+}
+
+debug = group {
+    CCFLAGS = { PARENT, "-g" };
+    LDFLAGS = { PARENT, "-g" };
+    
+    linux, win32;
 }
 
 all = group { linux, win32 }
