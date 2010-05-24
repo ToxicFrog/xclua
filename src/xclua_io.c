@@ -45,6 +45,7 @@ static int xclua_emit_print(lua_State * L)
 
 static int xclua_send_modes(lua_State * L) // FIXME
 {
+    
 	return 0;
 }
 
@@ -65,7 +66,7 @@ void luaopen_xclua_io(lua_State * L)
     lua_setfield(L, -2, "command");
     
     lua_pushcfunction(L, xclua_emit_print);
-    lua_setfield(L, -2, "emit_print");
+    lua_setfield(L, -2, "printe");
 
     if (luaL_dostring(L, XCLUA_PRINTF) || luaL_dostring(L, XCLUA_COMMANDF))
     {
