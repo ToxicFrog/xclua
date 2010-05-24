@@ -42,6 +42,7 @@ int luaopen_xchat(lua_State * L)
     lua_setglobal(L, "xchat");
     luaopen_xclua_io(L);
     luaopen_xclua_list(L);
+    luaopen_xclua_str(L);
     lua_pop(L, 1);
     
     return 0;

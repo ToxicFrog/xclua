@@ -11,6 +11,7 @@ objects = group {
     c.file "xclua_unload.c";
     c.file "xclua_io.c";
     c.file "xclua_list.c";
+    c.file "xclua_str.c";
 }
 
 plugin = c.sharedlib {

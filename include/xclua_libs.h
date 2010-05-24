@@ -3,5 +3,6 @@
 
 void luaopen_xclua_io(lua_State * L);
 void luaopen_xclua_list(lua_State * L);
+void luaopen_xclua_str(lua_State * L);
 
 #endif
