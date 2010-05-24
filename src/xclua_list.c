@@ -31,7 +31,7 @@ static int xclua_list_get(lua_State * L)
 		// from this, we build the table on the stack...
 		lua_newtable(L);
 			/* ... Tlist */
-		for(int entry = 1; xchat_list_next(ph,list); ++entry)
+		for(int entry = 1; xchat_list_next(ph, list); ++entry)
 		{
 			lua_pushinteger(L, entry);
 			lua_newtable(L);
@@ -63,6 +63,7 @@ static int xclua_list_get(lua_State * L)
 			lua_settable(L, -3);
 			/* ... Tlist */
 		} // foreach entry in table
+        xchat_list_free(ph, list);
 	} // foreach key in argv
 	return argc;
 }
