@@ -41,6 +41,7 @@ LDFLAGS = EMPTY;
 LDLIBS = EMPTY;
 LDPATHS = EMPTY;
 LDLINK = "%LD% %LDFLAGS% %LDPATHS:prepend_L% -o %out% %in% %LDLIBS:prepend_l%";
+STRIP = "strip";
 
 -- begin main library
 c = {}
@@ -132,7 +133,10 @@ c.staticlib = simple {
 -- poly object files -> one shared library
 c.sharedlib = simple {
     class = "c.sharedlib";
-    command = { "%LDLINK%" };
+    command = {
+        "%LDLINK%";
+        "%STRIP% %out%";
+    };
     outputs = { "%U%-%I%.so" };
 
     LDFLAGS = { PARENT, "-shared" };

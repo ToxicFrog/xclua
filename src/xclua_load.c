@@ -34,6 +34,15 @@ static const char * l_alloc_str(lua_State * L, const char * str)
     return ptr;
 }
 
+int luaopen_xchat(lua_State * L)
+{
+    lua_newtable(L);
+    lua_pushvalue(L, -1);
+    lua_setglobal(L, "xchat");
+    
+    return 0;
+}
+
 static int plugin_gc(lua_State * L)
 {
     Plugin * self = lua_touserdata(L, 1);
@@ -48,6 +57,18 @@ static int plugin_gc(lua_State * L)
 
 static Plugin * create_plugin(const char * file)
 {
+    /* check whether this is already loaded */
+    lua_getglobal(xclua_L, file);
+    if (lua_type(xclua_L, -1) != LUA_TNIL)
+    {
+        lua_pop(xclua_L, 1);
+        xchat_printf(ph
+            , "[lua]\tScript '%s' is already loaded."
+            , file);
+        return NULL;
+    }
+    lua_pop(xclua_L, 1);
+    
     /* create a VM for this plugin */
     lua_State * L = luaL_newstate();
         
@@ -55,7 +76,7 @@ static Plugin * create_plugin(const char * file)
     luaL_openlibs(L);
     
     /* FIXME: load xchat libraries */
-    /* luaopen_xchat(L); */
+    luaopen_xchat(L);
     
     /* create a Plugin object around it */
     Plugin * P = l_alloc(L, sizeof(Plugin), plugin_gc);
@@ -140,35 +161,4 @@ int xclua_load(char ** word, char ** word_eol, void * userdata)
     lua_setglobal(xclua_L, P->file);
     
     return XCHAT_EAT_ALL;
-}
-
-static int xclua_unload_by_name(const char * name)
-{
-    lua_State * L = xclua_L;
-    
-    lua_getglobal(L, name);
-    Plugin * P = lua_touserdata(L, -1);
-    lua_pop(L, 1);
-    
-    if (!P)
-        return XCHAT_EAT_NONE;
-    
-    /* clear entry in master plugins table */
-    lua_pushnil(L);
-    lua_setglobal(L, name);
-    
-    /* release plugin state - garbage collector will handle everything else */
-    lua_close(P->L);
-    
-    return XCHAT_EAT_ALL;
-}
-
-int xclua_unload(char ** word, char ** word_eol, void * userdata)
-{
-    /* no arguments/not a lua file: fall through to other plugins */
-    if (word[2] == NULL)
-        return XCHAT_EAT_NONE;
-
-    /* find the plugin by filename and unload it */
-    return xclua_unload_by_name(word[2]);
 }

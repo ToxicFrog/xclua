@@ -4,7 +4,7 @@
 #include <lualib.h>
 
 #include <xclua.h>
-#include <loadunload.h>
+#include <xclua_load_unload.h>
 
 /*	============================================================================
 		Globals
@@ -34,7 +34,6 @@ int xchat_plugin_init(
     /* register /lua */
     
     xclua_L = luaL_newstate();
-    luaL_openlibs(xclua_L);
     
     xchat_printf(ph, "[lua]\tLua scripting interface %s (%s) loaded.", XCLUA_VERSION, LUA_RELEASE);
     return 1;

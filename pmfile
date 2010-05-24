@@ -7,7 +7,8 @@ objects = group {
     CCINCLUDES = "include";
     
     c.file "xclua.c";
-    c.file "loadunload.c";
+    c.file "xclua_load.c";
+    c.file "xclua_unload.c";
 }
 
 plugin = c.sharedlib {
@@ -18,8 +19,7 @@ plugin = c.sharedlib {
 }
 
 linux = group {
-    LDFLAGS = { "-Wl,--export-dynamic" };
-    LIBS = { "lua" };
+    LDLIBS = { "lua" };
     EXT = "so";
     
     plugin;
@@ -32,6 +32,7 @@ win32 = group {
     LDPATHS = { "/mingw/bin", "/mingw/lib" };
 	LDLIBS = { "lua51" };
     EXT = "dll";
+    STRIP = "/mingw/bin/i386-mingw32-strip";
 
 	plugin;
 }
