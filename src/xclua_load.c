@@ -7,6 +7,7 @@
 #include <lauxlib.h>
 
 #include <xclua.h>
+#include <xclua_libs.h>
 
 static void * l_alloc(lua_State * L, size_t size, lua_CFunction gc)
 {
@@ -39,6 +40,7 @@ int luaopen_xchat(lua_State * L)
     lua_newtable(L);
     lua_pushvalue(L, -1);
     lua_setglobal(L, "xchat");
+    luaopen_xclua_io(L);
     
     return 0;
 }

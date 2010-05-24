@@ -9,6 +9,7 @@ objects = group {
     c.file "xclua.c";
     c.file "xclua_load.c";
     c.file "xclua_unload.c";
+    c.file "xclua_io.c";
 }
 
 plugin = c.sharedlib {
