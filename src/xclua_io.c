@@ -74,5 +74,8 @@ void luaopen_xclua_io(lua_State * L)
         lua_pop(L, 1);
     }
 
+    lua_pushcfunction(L, xclua_send_modes);
+    lua_setfield(L, -2, "send_modes");
+    
     return;
 }
