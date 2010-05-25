@@ -12,6 +12,7 @@ objects = group {
     c.file "xclua_io.c";
     c.file "xclua_list.c";
     c.file "xclua_str.c";
+    c.file "xclua_context.c";
 }
 
 plugin = c.sharedlib {
@@ -41,7 +42,7 @@ win32 = group {
 }
 
 debug = group {
-    CCFLAGS = { PARENT, "-g" };
+    CCFLAGS = { PARENT, "-g", "-Werror" };
     LDFLAGS = { PARENT, "-g" };
     
     linux, win32;
