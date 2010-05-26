@@ -54,6 +54,18 @@ static int plugin_gc(lua_State * L)
     Plugin * self = lua_touserdata(L, 1);
 
     /* FIXME: xchat.deinit gc handler */
+    lua_getglobal(L, "xchat");
+    if (lua_type(L, -1) == LUA_TTABLE)
+    {
+        lua_getfield(L, -1, "deinit");
+        if (lua_type(L, -1) == LUA_TFUNCTION && lua_pcall(L, 0, 0, 0))
+        {
+            xchat_printf(ph
+                , "[lua]\tError running xchat.deinit while unloading %s: %s"
+                , self->file
+                , lua_tostring(L, -1));
+        }
+    }
 
     if (self->gui)
         xchat_plugingui_remove(ph, self->gui);
