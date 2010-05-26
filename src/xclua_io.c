@@ -2,6 +2,7 @@
 #include <lauxlib.h>
 #include <xchat-plugin.h>
 #include <xclua.h>
+#include <ctype.h>
 
 static int xclua_print(lua_State * L) {
 	const char * text = luaL_checkstring(L, 1);
@@ -43,10 +44,61 @@ static int xclua_emit_print(lua_State * L)
 	return 0;
 }
 
+/* xchat.send_modes ("+o", "person", "person","person")
+   xchat.send_modes ("+o", people)
+   */
 static int xclua_send_modes(lua_State * L) // FIXME
 {
+    size_t len;
+    size_t n;
+    char sign = '\0';
+    char mode = '\0';
+    const char * modes = luaL_checklstring(L, 1, &len);
+    const char ** targets;
     
-	return 0;
+    if (lua_type(L, 2) == LUA_TTABLE)
+    {
+        if (lua_gettop(L) != 2)
+            return luaL_error(L, "Too many arguments to xchat.send_modes");
+        
+        n = lua_objlen(L, 2);
+        targets = lua_newuserdata(L, sizeof(char *) * n);
+        
+        for (size_t i = 0; i < n; ++i)
+        {
+            lua_rawgeti(L, 2, i+1);
+            targets[i] = lua_tostring(L, -1);
+            lua_pop(L, 1);
+        }
+    } else if (lua_type(L, 2) == LUA_TSTRING)
+    {
+        n = lua_gettop(L) - 1;
+        targets = lua_newuserdata(L, sizeof(char *) * n);
+        
+        for (size_t i = 0; i < n; ++i)
+        {
+            targets[i] = lua_tostring(L, i+2);
+        }
+    }
+    
+    for (size_t i = 0; i < len; ++i)
+    {
+        if (modes[i] == '+' || modes[i] == '-')
+        {
+            sign = modes[i];
+        } else if (isalpha(modes[i]))
+        {
+            mode = modes[i];
+            if (!(sign && mode)) break;
+            
+            xchat_send_modes(ph, targets, n, 0, sign, mode);
+        }
+    }
+
+    if (!(sign && mode))
+        return luaL_error(L, "Invalid mode string '%s' to xchat.send_modes", modes);
+    
+    return 0;
 }
 
 #define XCLUA_PRINTF \
