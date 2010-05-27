@@ -27,6 +27,8 @@ void luaopen_xclua_hooks(lua_State * L)
 {
     lua_pushcfunction(L, xclua_hook_command);
     lua_setfield(L, -2, "hook_command");
+    lua_pushcfunction(L, xclua_hook_timer);
+    lua_setfield(L, -2, "hook_timer");
 
     lua_pushcfunction(L, xclua_unhook);
     lua_setfield(L, -2, "unhook");
@@ -45,9 +47,11 @@ int xclua_callback(Hook * hook, char * name, char ** word, char ** word_eol)
 {
     lua_State * L = hook->L;
     lua_rawgeti(L, LUA_REGISTRYINDEX, hook->ref);
+    size_t argc = 0;
 
     if (word)
     {
+        ++argc;
         lua_newtable(L); /* word */
         for (size_t i = 1; word[i][0] != '\0'; ++i)
         {
@@ -58,6 +62,7 @@ int xclua_callback(Hook * hook, char * name, char ** word, char ** word_eol)
     
     if (word_eol)
     {
+        ++argc;
         lua_newtable(L); /* word word_eol */
         for (size_t i = 1; word_eol[i][0] != '\0'; ++i)
         {
@@ -68,7 +73,7 @@ int xclua_callback(Hook * hook, char * name, char ** word, char ** word_eol)
     
     unsigned int ret;
     
-    if (lua_pcall(L, 2, 1, 0))
+    if (lua_pcall(L, argc, 1, 0))
     {
         xchat_printf(ph, "[lua]\tError in callback for %s: %s", name, lua_tostring(L, -1));
         ret = XCHAT_EAT_ALL;
