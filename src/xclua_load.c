@@ -8,22 +8,7 @@
 
 #include <xclua.h>
 #include <xclua_libs.h>
-
-static void * l_alloc(lua_State * L, size_t size, lua_CFunction gc)
-{
-    void * ptr = lua_newuserdata(L, size);
-    memset(ptr, 0, size);
-    
-    if (gc)
-    {
-        lua_newtable(L);
-        lua_pushcfunction(L, gc);
-        lua_setfield(L, -2, "__gc");
-        lua_setmetatable(L, -2);
-    }
-    luaL_ref(L, LUA_REGISTRYINDEX);
-    return ptr;
-}
+#include <xclua_util.h>
 
 static const char * l_alloc_str(lua_State * L, const char * str)
 {
@@ -32,6 +17,7 @@ static const char * l_alloc_str(lua_State * L, const char * str)
     lua_pushstring(L, str);
     ptr = lua_tostring(L, -1);
     luaL_ref(L, LUA_REGISTRYINDEX);
+    
     return ptr;
 }
 
@@ -44,11 +30,12 @@ int luaopen_xchat(lua_State * L)
     luaopen_xclua_list(L);
     luaopen_xclua_str(L);
     luaopen_xclua_context(L);
+    luaopen_xclua_hooks(L);
     lua_pop(L, 1);
     
     return 0;
 }
-
+           
 static int plugin_gc(lua_State * L)
 {
     Plugin * self = lua_touserdata(L, 1);
@@ -97,7 +84,7 @@ static Plugin * create_plugin(const char * file)
     luaopen_xchat(L);
     
     /* create a Plugin object around it */
-    Plugin * P = l_alloc(L, sizeof(Plugin), plugin_gc);
+    Plugin * P = xclua_alloc(L, sizeof(Plugin), plugin_gc, "xchat_plugin");
     P->file = l_alloc_str(L, file);
     P->L = L;
     

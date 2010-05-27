@@ -15,11 +15,6 @@ typedef struct _plugin {
     lua_State * L;
 } Plugin;
 
-typedef struct _hook {
-    Plugin * P;
-    int ref;
-} Hook;
-
 /* global plugin handle */
 extern xchat_plugin * ph;
 

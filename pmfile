@@ -7,12 +7,15 @@ objects = group {
     CCINCLUDES = "include";
     
     c.file "xclua.c";
+    c.file "xclua_util.c";
     c.file "xclua_load.c";
     c.file "xclua_unload.c";
     c.file "xclua_io.c";
     c.file "xclua_list.c";
     c.file "xclua_str.c";
     c.file "xclua_context.c";
+    c.file "xclua_hooks.c";
+    c.file "xclua_hook_command.c";
 }
 
 plugin = c.sharedlib {

@@ -58,9 +58,6 @@ static int xclua_send_modes(lua_State * L) // FIXME
     
     if (lua_type(L, 2) == LUA_TTABLE)
     {
-        if (lua_gettop(L) != 2)
-            return luaL_error(L, "Too many arguments to xchat.send_modes");
-        
         n = lua_objlen(L, 2);
         targets = lua_newuserdata(L, sizeof(char *) * n);
         
@@ -77,7 +74,7 @@ static int xclua_send_modes(lua_State * L) // FIXME
         
         for (size_t i = 0; i < n; ++i)
         {
-            targets[i] = lua_tostring(L, i+2);
+            targets[i] = luaL_checkstring(L, i+2);
         }
     }
     
