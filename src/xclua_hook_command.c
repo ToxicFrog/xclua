@@ -5,81 +5,9 @@
 #include <lauxlib.h>
 #include <xclua_util.h>
 
-static int xclua_callback(Hook * hook, char * name, char ** word, char ** word_eol)
-{
-    lua_State * L = hook->L;
-    lua_rawgeti(L, LUA_REGISTRYINDEX, hook->ref);
-
-    if (word)
-    {
-        lua_newtable(L); /* word */
-        for (size_t i = 1; word[i][0] != '\0'; ++i)
-        {
-            lua_pushstring(L, word[i]);
-            lua_rawseti(L, -2, i);
-        }
-    }
-    
-    if (word_eol)
-    {
-        lua_newtable(L); /* word word_eol */
-        for (size_t i = 1; word_eol[i][0] != '\0'; ++i)
-        {
-            lua_pushstring(L, word_eol[i]);
-            lua_rawseti(L, -2, i);
-        }
-    }
-    
-    unsigned int ret;
-    
-    if (lua_pcall(L, 2, 1, 0))
-    {
-        xchat_printf(ph, "[lua]\tError in callback for %s: %s", name, lua_tostring(L, -1));
-        ret = XCHAT_EAT_ALL;
-    } else if (lua_type(L, -1) != LUA_TNUMBER
-           || (ret = (unsigned int)lua_tonumber(L, -1)) > XCHAT_EAT_ALL) {
-        xchat_printf(ph, "[lua]\tCallback for %s did not return a legal xchat.EAT_* value", name);
-        ret = XCHAT_EAT_ALL;
-    }
-    
-    lua_settop(L, 0);
-    return ret;
-}
-
 static int xclua_command_callback(char * word[], char * word_eol[], void * userdata)
 {
-    Hook * hook = (Hook *)userdata;
-    lua_State * L = hook->L;
-    lua_rawgeti(L, LUA_REGISTRYINDEX, hook->ref);
-
-    lua_newtable(L); /* word */
-    for (size_t i = 1; word[i][0] != '\0'; ++i)
-    {
-        lua_pushstring(L, word[i]);
-        lua_rawseti(L, -2, i);
-    }
-    
-    lua_newtable(L); /* word word_eol */
-    for (size_t i = 1; word_eol[i][0] != '\0'; ++i)
-    {
-        lua_pushstring(L, word_eol[i]);
-        lua_rawseti(L, -2, i);
-    }
-    
-    unsigned int ret;
-    
-    if (lua_pcall(L, 2, 1, 0))
-    {
-        xchat_printf(ph, "[lua]\tError in callback for %s: %s", word[1], lua_tostring(L, -1));
-        ret = XCHAT_EAT_ALL;
-    } else if (lua_type(L, -1) != LUA_TNUMBER
-           || (ret = (unsigned int)lua_tonumber(L, -1)) > XCHAT_EAT_ALL) {
-        xchat_printf(ph, "[lua]\tCallback for %s did not return a legal xchat.EAT_* value", word[1]);
-        ret = XCHAT_EAT_ALL;
-    }
-    
-    lua_settop(L, 0);
-    return ret;
+    return xclua_callback((Hook *)userdata, word[1], word, word_eol);
 }
 
 static void xclua_hook_command_validate(lua_State * L, const char ** command, int * pri, const char ** help)
