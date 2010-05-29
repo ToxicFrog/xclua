@@ -144,6 +144,8 @@ int xclua_load(char ** word, char ** word_eol, void * userdata)
     if (lua_pcall(P->L, 1, 3, 0) != 0)
     {
         xchat_printf(ph, "[lua]\tPlugin '%s' raised an error in xchat.init:", P->file, lua_tostring(P->L, -1));
+        xchat_printf(ph, "[lua]\t    %s", lua_tostring(P->L, -1));
+        xchat_printf(ph, "[lua]\tUnloading %s due to initialization error.", P->file);
         lua_close(P->L);
         return XCHAT_EAT_ALL;
     }

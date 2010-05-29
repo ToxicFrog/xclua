@@ -17,8 +17,8 @@ static void xclua_hook_command_validate(lua_State * L, const char ** command, in
     
     if (lua_gettop(L) > 2)
     {
-        if (lua_type(L, 3) == LUA_TNUMBER)
-            *pri = lua_tonumber(L, 3);
+        if (lua_type(L, 3) == LUA_TUSERDATA)
+            *pri = (int)luaL_checkudata(L, 3, "xchat_priority");
         else if (lua_type(L, 3) == LUA_TSTRING)
             *help = lua_tostring(L, 3);
         else
@@ -36,9 +36,9 @@ int xclua_hook_command(lua_State * L)
 {
     const char * command = NULL;
     const char * help = NULL;
-    int pri;
-    
-    xclua_hook_command_validate(L, &command, &pri, &help);
+    int priority = XCHAT_PRI_NORM;
+
+    xclua_hook_command_validate(L, &command, &priority, &help);
     
     Hook * hook = xclua_alloc(L, sizeof(*hook), xclua_hook_collect, "xchat_hook");
     hook->L = L;
@@ -46,7 +46,7 @@ int xclua_hook_command(lua_State * L)
     hook->ref = luaL_ref(L, LUA_REGISTRYINDEX);
     hook->hook = xchat_hook_command(ph
         , command
-        , pri
+        , priority
         , xclua_command_callback
         , help
         , hook);

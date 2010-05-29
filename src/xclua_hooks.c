@@ -29,18 +29,40 @@ void luaopen_xclua_hooks(lua_State * L)
     lua_setfield(L, -2, "hook_command");
     lua_pushcfunction(L, xclua_hook_timer);
     lua_setfield(L, -2, "hook_timer");
+    lua_pushcfunction(L, xclua_hook_server);
+    lua_setfield(L, -2, "hook_server");
 
     lua_pushcfunction(L, xclua_unhook);
     lua_setfield(L, -2, "unhook");
     
-    lua_pushnumber(L, XCHAT_EAT_NONE);
-    lua_setfield(L, -2, "EAT_NONE");
-    lua_pushnumber(L, XCHAT_EAT_PLUGIN);
-    lua_setfield(L, -2, "EAT_PLUGIN");
-    lua_pushnumber(L, XCHAT_EAT_XCHAT);
-    lua_setfield(L, -2, "EAT_XCHAT");
-    lua_pushnumber(L, XCHAT_EAT_ALL);
-    lua_setfield(L, -2, "EAT_ALL");
+    int * tmp;
+    
+    #define pusheat(eat, name) \
+        tmp = lua_newuserdata(L, sizeof(int)); \
+        *tmp = eat; \
+        luaL_newmetatable(L, "xchat_eat"); \
+        lua_setmetatable(L, -2); \
+        lua_setfield(L, -2, name);
+    
+    pusheat(XCHAT_EAT_NONE, "EAT_NONE");
+    pusheat(XCHAT_EAT_PLUGIN, "EAT_PLUGIN");
+    pusheat(XCHAT_EAT_XCHAT, "EAT_XCHAT");
+    pusheat(XCHAT_EAT_ALL, "EAT_ALL");
+    #undef pusheat
+    
+    #define pushpri(pri, name) \
+        tmp = lua_newuserdata(L, sizeof(int)); \
+        *tmp = pri; \
+        luaL_newmetatable(L, "xchat_priority"); \
+        lua_setmetatable(L, -2); \
+        lua_setfield(L, -2, name);
+    
+    pushpri(XCHAT_PRI_HIGHEST, "PRI_HIGHEST");
+    pushpri(XCHAT_PRI_HIGH, "PRI_HIGH");
+    pushpri(XCHAT_PRI_NORM, "PRI_NORM");
+    pushpri(XCHAT_PRI_LOW, "PRI_LOW");
+    pushpri(XCHAT_PRI_LOWEST, "PRI_LOWEST");
+    #undef pushpri
 }
 
 int xclua_callback(Hook * hook, char * name, char ** word, char ** word_eol)
@@ -71,148 +93,24 @@ int xclua_callback(Hook * hook, char * name, char ** word, char ** word_eol)
         }
     }
     
-    unsigned int ret;
+    int ret;
     
     if (lua_pcall(L, argc, 1, 0))
     {
         xchat_printf(ph, "[lua]\tError in callback for %s: %s", name, lua_tostring(L, -1));
         ret = XCHAT_EAT_ALL;
-    } else if (lua_type(L, -1) != LUA_TNUMBER
-           || (ret = (unsigned int)lua_tonumber(L, -1)) > XCHAT_EAT_ALL) {
-        xchat_printf(ph, "[lua]\tCallback for %s did not return a legal xchat.EAT_* value", name);
-        ret = XCHAT_EAT_ALL;
+    } else {
+        lua_getmetatable(L, -1);
+        luaL_newmetatable(L, "xchat_eat");
+        if (!lua_equal(L, -1, -2))
+        {
+            xchat_printf(ph, "[lua]\tCallback for %s did not return a legal xchat.EAT_* value", name);
+            ret = XCHAT_EAT_ALL;
+        } else {
+            ret = *(int *)lua_touserdata(L, -3);
+        }
     }
     
     lua_settop(L, 0);
     return ret;
 }
-
-
-#if 0
-/*	============================================================================
-		xchat_hook * xchat.hook_command(trigger, function, [help-text], [priority])
-============================================================================  */
-int xclua_hook_command(lua_State * L) {
-	const char * trigger = luaL_checkstring(L, 1);
-	luaL_checktype(L, 2, LUA_TFUNCTION);
-	const char * help_text = luaL_optstring(L, 3, "(no help text for this function)");
-	const int priority = luaL_optint(L, 4, XCHAT_PRI_NORM);
-	
-	XCLHook * hook = malloc(sizeof(XCLHook));
-	hook->L = L;
-	
-	hook->hook = xchat_hook_command(ph, trigger, priority, xclua_callback_command, help_text, hook);
-	
-	lua_pushvalue(L, 2);							/* trig fn ... fn */
-	xclua_register_hook(hook);						/* trig fn ... */
-	
-	lua_pushlightuserdata(L, (void *)hook);			/* trig fn ... hook */
-	return 1;										/* ( hook ) */
-}
-
-/*	============================================================================
-		Register a hook with the global and local states
-============================================================================  */
-void xclua_register_hook(XCLHook * hook) {
-	// get the reference table for the local state
-	lua_pushlightuserdata(hook->L, (void *)ph);				/* ... fn ph */
-	lua_rawget(hook->L, LUA_REGISTRYINDEX);					/* ... fn ref */
-	lua_pushlightuserdata(hook->L, (void *)hook);			/* ... fn ref hook */
-	lua_pushvalue(hook->L, -3);								/* ... fn ref hook fn */
-	lua_rawset(hook->L, -3);								/* ... fn ref */
-	lua_pop(hook->L, 2);									/* ... */
-}
-
-/*	============================================================================
-		xchat_hook * xchat.hook_print(trigger, function, [priority])
-============================================================================  */
-int xclua_hook_print(lua_State * L) {
-	XCLHook * hook = malloc(sizeof(XCLHook));
-	hook->L = L;
-	
-	const char * trigger = luaL_checkstring(L, 1);
-	luaL_checktype(L, 2, LUA_TFUNCTION);
-	const int priority = luaL_optint(L, 3, XCHAT_PRI_NORM);
-	
-	hook->hook = xchat_hook_print(ph, trigger, priority, xclua_callback_print, hook);
-	
-	lua_pushvalue(L, 2);							/* trig fn ... fn */
-	xclua_register_hook(hook);						/* trig fn ... */
-	
-	lua_pushlightuserdata(L, (void *)hook);			/* trig fn ... hook */
-	return 1;										/* ( hook ) */
-}
-
-/*	============================================================================
-		xchat_hook * xchat.hook_server(trigger, function, [priority])
-============================================================================  */
-int xclua_hook_server(lua_State * L) {
-	XCLHook * hook = malloc(sizeof(XCLHook));
-	hook->L = L;
-	
-	const char * trigger = luaL_checkstring(L, 1);
-	luaL_checktype(L, 2, LUA_TFUNCTION);
-	const int priority = luaL_optint(L, 3, XCHAT_PRI_NORM);
-	
-	hook->hook = xchat_hook_server(ph, trigger, priority, xclua_callback_server, hook);
-	
-	lua_pushvalue(L, 2);							/* trig fn ... fn */
-	xclua_register_hook(hook);						/* trig fn ... */
-	
-	lua_pushlightuserdata(L, (void *)hook);			/* trig fn ... hook */
-	return 1;										/* ( hook ) */
-}
-
-/*	============================================================================
-		xchat_hook * xchat.hook_timer(timeout, function)
-============================================================================  */
-int xclua_hook_timer(lua_State * L) {
-	XCLHook * hook = malloc(sizeof(XCLHook));
-	hook->L = L;
-
-	const int trigger = luaL_checkint(L, 1);
-	luaL_checktype(L, 2, LUA_TFUNCTION);
-	
-	hook->hook = xchat_hook_timer(ph, trigger, xclua_callback_timer, hook);
-	
-	lua_pushvalue(L, 2);							/* trig fn ... fn */
-	xclua_register_hook(hook);						/* trig fn ... */
-	
-	lua_pushlightuserdata(L, (void *)hook);			/* trig fn ... hook */
-	return 1;										/* ( hook ) */
-}		
-
-/*	============================================================================
-		xchat.unhook(xchat_hook *)
-============================================================================  */
-int xclua_unhook(lua_State * L) {
-	XCLHook * hook = lua_touserdata(L, 1);
-	if(hook == NULL) {
-		luaL_error(L, "Invalid hook passed to xchat.unhook()");
-	}
-	
-	// verify that the hook actually exists
-	// L.registry[ph][hook] ?
-	lua_pushlightuserdata(L, (void *)ph);			/* ... ph */
-	lua_rawget(L, LUA_REGISTRYINDEX);				/* ... ref */
-	lua_pushlightuserdata(L, (void *)hook);			/* ... ref hook */
-	lua_rawget(L, -2);								/* ... ref fn */
-	if(!lua_toboolean(L, -1)) {
-		luaL_error(L, "Attempted to unhook a hook that isn't hooked...so to speak.");
-	}
-	
-	xchat_unhook(ph, hook->hook);
-	
-	// clear the local reference to the hook
-	// L.registry[ph][hook] = nil
-	lua_pop(L, 1);									/* ... ref */
-	lua_pushlightuserdata(L, (void *)hook);			/* ... ref hook */
-	lua_pushnil(L);									/* ... ref hook nil */
-	lua_rawset(L, -3);								/* ... ref */
-	lua_pop(L, 1);									/* ... */
-	
-	// free the hook's data structures
-	free(hook);
-	return 0;
-}
-#endif

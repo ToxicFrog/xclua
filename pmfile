@@ -17,6 +17,8 @@ objects = group {
     c.file "xclua_hooks.c";
     c.file "xclua_hook_command.c";
     c.file "xclua_hook_timer.c";
+    c.file "xclua_hook_server.c";
+    c.file "xclua_hook_print.c";
 }
 
 plugin = c.sharedlib {
