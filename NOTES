@@ -1,0 +1,37 @@
+-- done --
+
+xchat_command 
+xchat_commandf 
+xchat_print 
+xchat_printf 
+xchat_emit_print 
+xchat_send_modes 
+xchat_list_get 
+xchat_nickcmp 
+xchat_strip 
+xchat_get_prefs 
+xchat_get_info 
+xchat_hook_command 
+xchat_find_context 
+xchat_get_context 
+xchat_set_context 
+xchat_hook_timer 
+xchat_unhook 
+xchat_hook_print 
+xchat_hook_server 
+
+-- not done --
+
+xchat.rehook
+xchat.showhook
+redirect stdin/stdout to xchat console
+autoloading of lua scripts on load
+documentation
+
+-- never done --
+
+xchat_hook_fd 
+xchat_gettext
+xchat_plugingui_add 
+xchat_plugingui_remove 
+

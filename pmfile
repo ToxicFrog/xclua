@@ -54,7 +54,15 @@ debug = group {
     linux, win32;
 }
 
-all = group { linux, win32 }
+docs = simple {
+    command = "rst2html.py < %in% > %out%";
+    outputs = { "%U%-%I%.html" };
+    install = pm.install "doc/xclua.html";
+    
+    file "doc/xclua.rst";
+}
+
+all = group { linux, win32, docs }
 
 default = all
 
