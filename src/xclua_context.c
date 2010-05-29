@@ -9,7 +9,10 @@ int xclua_find_context(lua_State * L) {
 	const char * server = luaL_optstring(L, 1, NULL);
 	const char * channel = luaL_optstring(L, 2, NULL);
 	xchat_context * context = xchat_find_context(ph, server, channel);
-	lua_pushlightuserdata(L, context);
+    if (context)
+        lua_pushlightuserdata(L, context);
+    else
+        lua_pushnil(L);
 	return 1;
 }
 
