@@ -31,6 +31,8 @@ void luaopen_xclua_hooks(lua_State * L)
     lua_setfield(L, -2, "hook_timer");
     lua_pushcfunction(L, xclua_hook_server);
     lua_setfield(L, -2, "hook_server");
+    lua_pushcfunction(L, xclua_hook_print);
+    lua_setfield(L, -2, "hook_print");
 
     lua_pushcfunction(L, xclua_unhook);
     lua_setfield(L, -2, "unhook");
