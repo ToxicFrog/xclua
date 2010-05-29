@@ -5,6 +5,7 @@
 
 #include <xclua.h>
 #include <xclua_load_unload.h>
+#include <xclua_ftw.h>
 
 /*	============================================================================
 		Globals
@@ -34,6 +35,7 @@ int xchat_plugin_init(
     /* register /lua */
     
     xclua_L = luaL_newstate();
+    xclua_open_all_scripts();
     
     xchat_printf(ph, "[lua]\tLua scripting interface %s (%s) loaded.", XCLUA_VERSION, LUA_RELEASE);
     return 1;
