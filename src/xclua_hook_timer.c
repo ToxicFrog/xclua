@@ -9,7 +9,7 @@
 
 static int xclua_timer_callback(void * userdata)
 {
-    return xclua_callback((Hook *)userdata, "<timer>", NULL, NULL);
+    return xclua_callback((Hook *)userdata, NULL, NULL);
 }
 
 /* xchat.hook_timer(timeout, callback) */

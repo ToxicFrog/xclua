@@ -100,7 +100,7 @@ void luaopen_xclua_hooks(lua_State * L)
     #undef pushpri
 }
 
-int xclua_callback(Hook * hook, char * name, char ** word, char ** word_eol)
+int xclua_callback(Hook * hook, char ** word, char ** word_eol)
 {
     lua_State * L = hook->L;
     lua_rawgeti(L, LUA_REGISTRYINDEX, hook->ref);

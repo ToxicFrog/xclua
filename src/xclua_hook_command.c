@@ -9,7 +9,7 @@
 
 static int xclua_command_callback(char * word[], char * word_eol[], void * userdata)
 {
-    return xclua_callback((Hook *)userdata, word[1], word, word_eol);
+    return xclua_callback((Hook *)userdata, word, word_eol);
 }
 
 static void xclua_hook_command_validate(lua_State * L, const char ** command, int * pri, const char ** help)

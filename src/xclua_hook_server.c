@@ -9,7 +9,7 @@
 
 static int xclua_server_callback(char ** word, char ** word_eol, void * userdata)
 {
-    return xclua_callback((Hook *)userdata, "<timer>", NULL, NULL);
+    return xclua_callback((Hook *)userdata, word, word_eol);
 }
 
 /* xchat.hook_server(name, fn, priority) */
