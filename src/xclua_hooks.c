@@ -25,16 +25,28 @@ static int xclua_unhook(lua_State * L)
     return 0;
 }
 
-int xclua_hook_collect(lua_State * L)
+static int xclua_hook_gc(lua_State * L)
 {
     Hook * hook = (Hook *)luaL_checkudata(L, 1, "xchat_hook");
+    
     if (hook->hook)
         xchat_unhook(ph, hook->hook);
+    if (hook->name)
+        free(hook->name);
+    
     return 0;
+}
+
+static int xclua_hook_tostring(lua_State * L)
+{
+    Hook * hook = luaL_checkudata(L, 1, "xchat_hook");
+    lua_pushfstring(L, "xchat_hook: %s", hook->name);
+    return 1;
 }
 
 void luaopen_xclua_hooks(lua_State * L)
 {
+    /* xchat.hook_* functions */
     lua_pushcfunction(L, xclua_hook_command);
     lua_setfield(L, -2, "hook_command");
     lua_pushcfunction(L, xclua_hook_timer);
@@ -44,11 +56,21 @@ void luaopen_xclua_hooks(lua_State * L)
     lua_pushcfunction(L, xclua_hook_print);
     lua_setfield(L, -2, "hook_print");
 
+    /* xchat.unhook */
     lua_pushcfunction(L, xclua_unhook);
     lua_setfield(L, -2, "unhook");
     
+    /* metatable for xchat_hook type */
+    luaL_newmetatable(L, "xchat_hook");
+    lua_pushcfunction(L, xclua_hook_gc);
+    lua_setfield(L, -2, "__gc");
+    lua_pushcfunction(L, xclua_hook_tostring);
+    lua_setfield(L, -2, "__tostring");
+    lua_pop(L, 1);
+    
     int * tmp;
     
+    /* XCHAT_EAT_* constants */
     #define pusheat(eat, name) \
         tmp = lua_newuserdata(L, sizeof(int)); \
         *tmp = eat; \
@@ -62,6 +84,7 @@ void luaopen_xclua_hooks(lua_State * L)
     pusheat(XCHAT_EAT_ALL, "EAT_ALL");
     #undef pusheat
     
+    /* XCHAT_PRI_* constants */
     #define pushpri(pri, name) \
         tmp = lua_newuserdata(L, sizeof(int)); \
         *tmp = pri; \

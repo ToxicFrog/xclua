@@ -21,21 +21,6 @@ static const char * l_alloc_str(lua_State * L, const char * str)
     return ptr;
 }
 
-int luaopen_xchat(lua_State * L)
-{
-    lua_newtable(L);
-    lua_pushvalue(L, -1);
-    lua_setglobal(L, "xchat");
-    luaopen_xclua_io(L);
-    luaopen_xclua_list(L);
-    luaopen_xclua_str(L);
-    luaopen_xclua_context(L);
-    luaopen_xclua_hooks(L);
-    lua_pop(L, 1);
-    
-    return 0;
-}
-           
 static int plugin_gc(lua_State * L)
 {
     Plugin * self = lua_touserdata(L, 1);
@@ -56,6 +41,35 @@ static int plugin_gc(lua_State * L)
     if (self->gui)
         xchat_plugingui_remove(ph, self->gui);
 
+    return 0;
+}
+
+static int plugin_tostring(lua_State * L)
+{
+    Plugin * P = luaL_checkudata(L, 1, "xchat_plugin");
+    lua_pushfstring(L, "xchat_plugin: %s (%p)", P->name, P);
+    return 1;
+}
+
+int luaopen_xchat(lua_State * L)
+{
+    lua_newtable(L);
+    lua_pushvalue(L, -1);
+    lua_setglobal(L, "xchat");
+    luaopen_xclua_io(L);
+    luaopen_xclua_list(L);
+    luaopen_xclua_str(L);
+    luaopen_xclua_context(L);
+    luaopen_xclua_hooks(L);
+    lua_pop(L, 1);
+    
+    luaL_newmetatable(L, "xchat_plugin");
+    lua_pushcfunction(L, plugin_gc);
+    lua_setfield(L, -2, "__gc");
+    lua_pushcfunction(L, plugin_tostring);
+    lua_setfield(L, -2, "__tostring");
+    lua_pop(L, 1);
+    
     return 0;
 }
 
@@ -83,7 +97,8 @@ static Plugin * create_plugin(const char * file)
     luaopen_xchat(L);
     
     /* create a Plugin object around it */
-    Plugin * P = xclua_alloc(L, sizeof(Plugin), plugin_gc, "xchat_plugin");
+    Plugin * P = xclua_alloc(L, sizeof(Plugin), "xchat_plugin");
+    lua_pop(L, 1);
     P->file = l_alloc_str(L, file);
     P->L = L;
     

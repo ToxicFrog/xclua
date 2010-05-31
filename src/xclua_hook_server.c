@@ -4,6 +4,8 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <xclua_util.h>
+#include <stdlib.h>
+#include <string.h>
 
 static int xclua_server_callback(char ** word, char ** word_eol, void * userdata)
 {
@@ -20,8 +22,17 @@ int xclua_hook_server(lua_State * L)
     if (lua_gettop(L) > 2)
         priority = (int)luaL_checkudata(L, 3, "xchat_priority");
     
-    Hook * hook = xclua_alloc(L, sizeof(*hook), xclua_hook_collect, "xchat_hook");
+    Hook * hook = xclua_alloc(L, sizeof(*hook), "xchat_hook");
     hook->L = L;
+    
+    lua_pushfstring(L, "server: %s (%p)", name, hook);
+    hook->name = malloc(lua_objlen(L, -1)+1);
+    strcpy(hook->name, lua_tostring(L, -1));
+    lua_pop(L, 1);
+
+    hook->name = malloc(strlen(name)+1);
+    strcpy(hook->name, name);
+    
     lua_pushvalue(L, 2);
     hook->ref = luaL_ref(L, LUA_REGISTRYINDEX);
     hook->hook = xchat_hook_server(ph
