@@ -94,7 +94,7 @@ void luaopen_xclua_hooks(lua_State * L)
     
     pushpri(XCHAT_PRI_HIGHEST, "PRI_HIGHEST");
     pushpri(XCHAT_PRI_HIGH, "PRI_HIGH");
-    pushpri(XCHAT_PRI_NORM, "PRI_NORM");
+    pushpri(XCHAT_PRI_NORM, "PRI_NORMAL");
     pushpri(XCHAT_PRI_LOW, "PRI_LOW");
     pushpri(XCHAT_PRI_LOWEST, "PRI_LOWEST");
     #undef pushpri
