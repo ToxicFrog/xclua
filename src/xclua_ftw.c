@@ -69,7 +69,7 @@ void xclua_open_all_scripts()
 		{
 			if( is_lua_script(ent->d_name) )
             {
-                xchat_printf(ph, "[lua]\tAutoloading %s", ent->d_name);
+                xchat_printf(ph, "[lua]\tAutoloading %s\n", ent->d_name);
                 xchat_commandf(ph, "load %s%s", plugins, ent->d_name);
             }
 		}

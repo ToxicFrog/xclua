@@ -37,7 +37,7 @@ int xchat_plugin_init(
     xclua_L = luaL_newstate();
     xclua_open_all_scripts();
     
-    xchat_printf(ph, "[lua]\tLua scripting interface %s (%s) loaded.", XCLUA_VERSION, LUA_RELEASE);
+    xchat_printf(ph, "[lua]\tLua scripting interface %s (%s) loaded.\n", XCLUA_VERSION, LUA_RELEASE);
     return 1;
 }
 
@@ -54,6 +54,6 @@ int xchat_plugin_deinit()
     }
     
     lua_close(L);
-    xchat_printf(ph, "[lua]\tLua scripting interface unloaded.");
+    xchat_printf(ph, "[lua]\tLua scripting interface unloaded.\n");
 	return 1;
 }

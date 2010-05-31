@@ -40,7 +40,6 @@ static int plugin_gc(lua_State * L)
 {
     Plugin * self = lua_touserdata(L, 1);
 
-    /* FIXME: xchat.deinit gc handler */
     lua_getglobal(L, "xchat");
     if (lua_type(L, -1) == LUA_TTABLE)
     {
@@ -48,7 +47,7 @@ static int plugin_gc(lua_State * L)
         if (lua_type(L, -1) == LUA_TFUNCTION && lua_pcall(L, 0, 0, 0))
         {
             xchat_printf(ph
-                , "[lua]\tError running xchat.deinit while unloading %s: %s"
+                , "[lua]\tError running xchat.deinit while unloading %s: %s\n"
                 , self->file
                 , lua_tostring(L, -1));
         }
@@ -68,7 +67,7 @@ static Plugin * create_plugin(const char * file)
     {
         lua_pop(xclua_L, 1);
         xchat_printf(ph
-            , "[lua]\tScript '%s' is already loaded."
+            , "[lua]\tScript '%s' is already loaded.\n"
             , file);
         return NULL;
     }
@@ -92,7 +91,7 @@ static Plugin * create_plugin(const char * file)
     if (luaL_loadfile(L, P->file) != 0)
     {
         xchat_printf(ph
-            , "[lua]\tError loading '%s': %s"
+            , "[lua]\tError loading '%s': %s\n"
             , P->file
             , lua_tostring(L, -1));
         lua_close(L);
@@ -102,7 +101,7 @@ static Plugin * create_plugin(const char * file)
     /* call the script */ 
     if (lua_pcall(L, 0, 0, 0) != 0)
     {
-        xchat_printf(ph, "[lua]\tError initializing '%s': %s"
+        xchat_printf(ph, "[lua]\tError initializing '%s': %s\n"
             , P->file
             , lua_tostring(L, -1));
         lua_close(L);
@@ -127,7 +126,7 @@ int xclua_load(char ** word, char ** word_eol, void * userdata)
     lua_getglobal(P->L, "xchat");
     if (lua_type(P->L, -1) != LUA_TTABLE)
     {
-        xchat_printf(ph, "[lua]\tPlugin '%s' removed xchat library during initialization.", P->file);
+        xchat_printf(ph, "[lua]\tPlugin '%s' removed xchat library during initialization.\n", P->file);
         lua_close(P->L);
         return XCHAT_EAT_ALL;
     }
@@ -135,7 +134,7 @@ int xclua_load(char ** word, char ** word_eol, void * userdata)
     lua_getfield(P->L, -1, "init");
     if (lua_type(P->L, -1) != LUA_TFUNCTION)
     {
-        xchat_printf(ph, "[lua]\tPlugin '%s' removed xchat.init and failed to provide a replacement.", P->file);
+        xchat_printf(ph, "[lua]\tPlugin '%s' removed xchat.init and failed to provide a replacement.\n", P->file);
         lua_close(P->L);
         return XCHAT_EAT_ALL;
     }
@@ -143,9 +142,9 @@ int xclua_load(char ** word, char ** word_eol, void * userdata)
     lua_pushstring(P->L, P->file);
     if (lua_pcall(P->L, 1, 3, 0) != 0)
     {
-        xchat_printf(ph, "[lua]\tPlugin '%s' raised an error in xchat.init:", P->file, lua_tostring(P->L, -1));
-        xchat_printf(ph, "[lua]\t    %s", lua_tostring(P->L, -1));
-        xchat_printf(ph, "[lua]\tUnloading %s due to initialization error.", P->file);
+        xchat_printf(ph, "[lua]\tPlugin '%s' raised an error in xchat.init:\n", P->file);
+        xchat_printf(ph, "[lua]\t    %s\n", lua_tostring(P->L, -1));
+        xchat_printf(ph, "[lua]\tUnloading %s due to initialization error.\n", P->file);
         lua_close(P->L);
         return XCHAT_EAT_ALL;
     }
@@ -156,7 +155,7 @@ int xclua_load(char ** word, char ** word_eol, void * userdata)
         
     if (!(P->name && P->desc && P->version))
     {
-        xchat_printf(ph, "[lua]\tPlugin '%s' init function did not return correct values", P->file);
+        xchat_printf(ph, "[lua]\tPlugin '%s' init function did not return correct values.\n", P->file);
         /* FIXME: print stack contents */
         lua_close(P->L);
         return XCHAT_EAT_ALL;

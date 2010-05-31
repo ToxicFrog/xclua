@@ -9,8 +9,18 @@
 static int xclua_unhook(lua_State * L)
 {
     Hook * hook = (Hook *)luaL_checkudata(L, 1, "xchat_hook");
+    
+    if (!hook->hook)
+    {
+        /* we have a problem - a double unhook */
+        /* for now we just emit a warning */
+        xchat_printf(ph, "[lua]\tWarning: attempt to unhook %s, which is already unhooked\n", hook->name);
+    }
+        
     xchat_unhook(ph, hook->hook);
     hook->hook = NULL;
+    
+    /* it is now subject to garbage collection if they aren't holding on to it */
     xclua_free(L, hook);
     return 0;
 }
@@ -99,14 +109,14 @@ int xclua_callback(Hook * hook, char * name, char ** word, char ** word_eol)
     
     if (lua_pcall(L, argc, 1, 0))
     {
-        xchat_printf(ph, "[lua]\tError in callback for %s: %s", name, lua_tostring(L, -1));
+        xchat_printf(ph, "[lua]\tError in callback for %s: %s\n", hook->name, lua_tostring(L, -1));
         ret = XCHAT_EAT_ALL;
     } else {
         lua_getmetatable(L, -1);
         luaL_newmetatable(L, "xchat_eat");
         if (!lua_equal(L, -1, -2))
         {
-            xchat_printf(ph, "[lua]\tCallback for %s did not return a legal xchat.EAT_* value", name);
+            xchat_printf(ph, "[lua]\tCallback for %s did not return a legal xchat.EAT_* value\n", hook->name);
             ret = XCHAT_EAT_ALL;
         } else {
             ret = *(int *)lua_touserdata(L, -3);
